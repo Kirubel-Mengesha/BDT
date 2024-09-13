@@ -1,0 +1,15 @@
+REGISTER /usr/lib/pig/piggybank.jar;
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+movieS = LOAD '/home/cloudera/cs523/MovieDataSet/movies.csv' USING CSVLoader AS (movieId:int, title:chararray, genres:chararray);
+
+filteredMovies = FILTER movieS BY STARTSWITH(title, 'a') OR STARTSWITH(title, 'A');
+
+genreList = FOREACH filteredMovies GENERATE FLATTEN(STRSPLIT(genres, '\\|', 0)) AS genre;
+
+grouped = GROUP genreList BY genre;
+genreCount = FOREACH grouped GENERATE group AS genre, COUNT(genreList) AS count;
+
+sorted = ORDER genreCount BY genre;
+
+STORE sorted INTO 'PigFilteredGenresOutput';

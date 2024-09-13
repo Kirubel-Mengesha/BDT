@@ -1,0 +1,23 @@
+
+REGISTER /usr/lib/pig/piggybank.jar;
+
+DEFINE CSVLoader org.apache.pig.piggybank.storage.CSVLoader();
+
+movies = LOAD '/home/cloudera/cs523/MovieDataSet/movies.csv' USING CSVLoader(',') AS (movie_id:int, title:chararray, genre:chararray);
+
+ratings = LOAD '/home/cloudera/cs523/MovieDataSet/rating.txt' AS (user_id:int, movie_id:int, rating:int, timestamp:long);
+
+filteredRatings = FILTER ratings BY rating == 5;
+
+filteredMovies = FILTER movies BY genre matches '.*Adventure.*';
+
+filteredMovieRatings = JOIN filteredMovies BY movie_id, filteredRatings BY movie_id;
+
+top20AdvMoviesList = FOREACH filteredMovieRatings GENERATE filteredMovies::movie_id AS MovieId, 'Adventure' AS Genre, filteredRatings::rating AS Rating, filteredMovies::title AS Title;
+uniqueMovies = DISTINCT top20AdvMoviesList;
+
+orderMovies = ORDER uniqueMovies BY MovieId;
+
+top20Movies = LIMIT orderMovies 20;
+
+STORE top20Movies INTO 'PigTop20AdventureMovies' USING PigStorage('\t');

@@ -1,0 +1,19 @@
+visits = LOAD '/home/cloudera/cs523/pages.csv' USING PigStorage('\t') AS (site:chararray, userid:chararray);
+
+users = LOAD '/home/cloudera/cs523/users.csv' USING PigStorage('\t') AS (name:chararray, age:int);
+
+usersFiltered = FILTER users BY (age >= 18) AND (age <= 25);
+
+filterVisits = JOIN usersFiltered BY $0, visits BY $1;
+
+sitesVisited = FOREACH filterVisits GENERATE site;
+
+siteGroups = GROUP sitesVisited BY site;
+
+visitCounts = FOREACH siteGroups GENERATE group AS site, COUNT(sitesVisited) AS visits;
+
+orderedCounts = ORDER visitCounts BY visits DESC;
+
+topFive = LIMIT orderedCounts 5;
+
+STORE topFive INTO 'PigOutput-2';

@@ -1,0 +1,11 @@
+
+data = LOAD '/home/cloudera/workspace/Lab5-pig-part1/InputForWC.txt' USING TextLoader() AS (line:chararray);
+
+words = FOREACH data GENERATE FLATTEN(TOKENIZE(line, '\t '))  AS word;
+
+grouped = GROUP words BY word;
+
+wordCount = FOREACH grouped GENERATE group AS word, COUNT(words) AS count;
+
+STORE wordCount INTO 'pigOutput';
+
